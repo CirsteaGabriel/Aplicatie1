@@ -1,0 +1,61 @@
+trigger:
+- main
+
+pool:
+  name: AgentPoolPipelines
+
+variables:
+  buildConfiguration: 'Release'
+
+stages:
+- stage: Build
+  displayName: 'Build Stage'
+  jobs:
+  - job: BuildJob
+    displayName: 'Build the application'
+    steps:
+    - task: UseDotNet@2
+      inputs:
+        packageType: 'sdk'
+        version: '6.x'  # Specifică o versiune suportată a SDK-ului .NET
+        installationPath: $(Agent.ToolsDirectory)/dotnet
+
+    - task: DotNetCoreCLI@2
+      inputs:
+        command: 'restore'
+        projects: '**/*.csproj'
+
+    - task: DotNetCoreCLI@2
+      inputs:
+        command: 'build'
+        projects: '**/*.csproj'
+        arguments: '--configuration $(buildConfiguration)'
+
+- stage: Test
+  displayName: 'Test Stage'
+  jobs:
+  - job: TestJob
+    displayName: 'Run Tests'
+    steps:
+    - script: |
+        echo "No tests to run in this example."
+      displayName: 'Echo Test Message'
+
+- stage: CodeVerification
+  displayName: 'Code Verification Stage'
+  jobs:
+  - job: VerifyCodeJob
+    displayName: 'Verify Code'
+    steps:
+    - script: |
+        echo "Verifying if the main program file exists..."
+        
+        REM Verificarea existenței fișierului Program.cs (sau orice alt fișier relevant)
+        IF EXIST "Program.cs" (
+          echo "Program.cs exists."
+        ) ELSE (
+          echo "Error: Program.cs does not exist."
+          exit /b 1  REM Ieșire cu cod de eroare pentru a marca testul ca eșuat
+        )
+        
+      displayName: 'Check for Program.cs File'

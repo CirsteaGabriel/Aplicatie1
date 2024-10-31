@@ -1,0 +1,65 @@
+# Trigger: Acesta specifică ramura care va activa pipeline-ul atunci când există modificări.
+trigger:
+- main  # Pipeline-ul se va activa pentru orice modificare pe ramura 'main'.
+
+# Pool: Specifică agentul care va rula sarcinile din pipeline.
+pool:
+  name: Pool2  # Folosește un agent din pool-ul numit 'Pool2'.
+
+# Variables: Definirea variabilelor utilizate în pipeline.
+variables:
+  buildConfiguration: 'Release'  # Variabila care specifică configurația de build (Release).
+
+# Stages: Pipeline-ul este structurat în etape.
+stages:
+- stage: Build  # Numele etapei de construire.
+  displayName: 'Build Stage'  # Numele afișat pentru etapa de construire.
+  jobs:
+  - job: BuildJob  # Numele job-ului din etapa de construire.
+    displayName: 'Build the application'  # Numele afișat pentru job-ul de construire.
+    steps:
+    - task: UseDotNet@2  # Sarcina pentru a instala SDK-ul .NET.
+      inputs:
+        packageType: 'sdk'  # Tipul pachetului care va fi instalat (SDK).
+        version: '6.x'  # Specifică o versiune suportată a SDK-ului .NET (6.x).
+        installationPath: $(Agent.ToolsDirectory)/dotnet  # Calea unde va fi instalat SDK-ul.
+
+    - task: DotNetCoreCLI@2  # Sarcina pentru a restaura pachetele necesare.
+      inputs:
+        command: 'restore'  # Comanda care va fi executată (restaurarea pachetelor).
+        projects: '**/*.csproj'  # Calea către fișierele de proiect (.csproj) care trebuie restaurate.
+
+    - task: DotNetCoreCLI@2  # Sarcina pentru a construi aplicația.
+      inputs:
+        command: 'build'  # Comanda care va fi executată (construirea aplicației).
+        projects: '**/*.csproj'  # Calea către fișierele de proiect (.csproj) care trebuie construite.
+        arguments: '--configuration $(buildConfiguration)'  # Argumente suplimentare pentru comanda de build, folosind variabila definită anterior.
+
+- stage: Test  # Numele etapei de testare.
+  displayName: 'Test Stage'  # Numele afișat pentru etapa de testare.
+  jobs:
+  - job: TestJob  # Numele job-ului din etapa de testare.
+    displayName: 'Run Tests'  # Numele afișat pentru job-ul de testare.
+    steps:
+    - script: |  # Pasul care execută un script shell.
+        echo "No tests to run in this example."  # Afișează un mesaj informativ că nu există teste de rulat în acest exemplu.
+      displayName: 'Echo Test Message'  # Numele afișat pentru pasul de script.
+
+- stage: CodeVerification  # Numele etapei de verificare a codului.
+  displayName: 'Code Verification Stage'  # Numele afișat pentru etapa de verificare a codului.
+  jobs:
+  - job: VerifyCodeJob  # Numele job-ului din etapa de verificare a codului.
+    displayName: 'Verify Code'  # Numele afișat pentru job-ul de verificare a codului.
+    steps:
+    - script: |  
+        echo "Verifying if the main program file exists..."  
+        
+        REM Verificarea existenței fișierului Program.cs (sau orice alt fișier relevant)
+        IF EXIST "Program.cs" (  
+          echo "Program.cs exists."  
+        ) ELSE (  
+          echo "Error: Program.cs does not exist."  
+          exit /b 1  REM Ieșire cu cod de eroare pentru a marca testul ca eșuat  
+        )  
+        
+      displayName: 'Check for Program.cs File'  
